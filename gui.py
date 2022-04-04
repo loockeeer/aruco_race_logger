@@ -1,6 +1,3 @@
-import copy
-import csv
-import pickle
 import time
 from PySide6 import QtWidgets, QtGui, QtCore
 from PySide6.QtGui import QPixmap, Qt
@@ -82,14 +79,16 @@ class RaceTable(QTableWidget):
             filter(
                 lambda marker: len(marker.passed) != 0 and marker.speed != -1,
                 reversed(
-                    sorted(markers.values(), key=lambda marker: sum(marker.passed))
+                    sorted(markers.values(), key=lambda marker: (len(marker.passed), 0 if len(marker.passed) == 0 else marker.passed[-1]))
                 ),
             )
         )
         ordered_by_time = list(
             sorted(
                 markers,
-                key=lambda marker: (len(marker.passed), 0 if len(marker.passed) == 0 else marker.passed[-1]),
+                key=lambda marker: 99999
+                if len(marker.passed) == 0
+                else marker.passed[-1],
             )
         )
         for i, marker in enumerate(markers):
