@@ -79,7 +79,7 @@ class RaceTable(QTableWidget):
             filter(
                 lambda marker: len(marker.passed) != 0 and marker.speed != -1,
                 reversed(
-                    sorted(markers.values(), key=lambda marker: (len(marker.passed), 0 if len(marker.passed) == 0 else marker.passed[-1]))
+                    sorted(markers.values(), key=lambda marker: (len(marker.passed), 0 if len(marker.passed) == 0 else -marker.passed[-1]))
                 ),
             )
         )
