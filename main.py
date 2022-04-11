@@ -5,6 +5,8 @@ from gui import *
 import sys
 import yaml
 import numpy as np
+from signal import signal, SIGINT, SIG_DFL
+
 
 
 def gather_data(arucoInstance, gui):
@@ -20,14 +22,14 @@ def gather_data(arucoInstance, gui):
             break
         gui.setData(arucoInstance.markers)
         saveDataCSV("./race_data.csv", arucoInstance.markers, gui.start_time)
-        if hasattr(gui, "video"):
-            gui.video.show_image(frame, len(passed) > 0, len(passed) > 0)
+        gui.show_image(frame, len(passed) > 0, len(passed) > 0)
+
 
 def saveDataCSV(filename, markers, start_time):
     with open(filename, "w") as file:
         markers = list(
             filter(
-                lambda marker: len(marker.passed) != 0 and marker.speed != -1,
+                lambda marker: len(marker.passed) != 0,
                 reversed(
                     sorted(markers.values(), key=lambda marker: sum(marker.passed))
                 ),
@@ -53,6 +55,9 @@ def saveDataCSV(filename, markers, start_time):
         writer.writerow(fields)
         writer.writerows(formatted)
 
+def get_dict_from_input(inp):
+    return getattr(cv2.aruco, f"DICT_{inp}X{inp}_250")
+
 if __name__ == "__main__":
     with open("./parameters.yaml", "r") as file:
         loaded = yaml.load(file, Loader=yaml.FullLoader)
@@ -65,11 +70,13 @@ if __name__ == "__main__":
         float(sys.argv[3]),
         matrix,
         dist,
-        cv2.aruco.DICT_6X6_250,
+        get_dict_from_input(sys.argv[4]),
     )
 
     app = QtWidgets.QApplication(sys.argv)
     gui = RaceGui()
+    signal(SIGINT, SIG_DFL)
+
     thread = threading.Thread(target=gather_data, args=(detector, gui))
     thread.start()
     gui.show()

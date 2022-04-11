@@ -3,6 +3,10 @@ from dataclasses import dataclass, field
 import time
 import math
 
+from hampel import hampel
+import pandas as pd
+
+MAX_HISTORY = 30
 
 def dist(cA, cB):
     return math.sqrt((cA[0] - cB[0]) ** 2 + (cA[1] - cB[1]) ** 2)
@@ -13,9 +17,7 @@ def get_distance(focal, real_length, corners):
 
 
 def isPassed(current, before, line):
-    return abs(current - line) + abs(before - line) != abs(
-        (current - line) + (before - line)
-    )
+    return (before > line) and (current < line)
 
 
 @dataclass
@@ -26,6 +28,9 @@ class Point:
     distance: float
     time: float
 
+
+def speed(p1, p2):
+    return (p2.distance - p1.distance) / (p2.time - p1.time)
 
 @dataclass
 class Marker:
@@ -52,6 +57,9 @@ class Marker:
                 time.time(),
             )
         )
+
+        if len(self.history) > MAX_HISTORY:
+            self.history = self.history[-MAX_HISTORY:]
         if marker_passed:
             self.passed.append(time.time())
 
@@ -60,28 +68,26 @@ class Marker:
             self.parent.avg_focal, self.parent.marker_real_length, self.corners
         )
 
-    def speed(self, avg=2):
+    def speed(self, avg=4):
         if avg < 2:
             raise "Average speed must be at least on 2 points"
         if len(self.history) < avg:
             return -1
         points = self.history[-avg:]
-
-        return abs(
-            dist((points[0].x, points[0].y), (points[-1].x, points[-1].y))
-            / (points[0].time - points[-1].time)
-        )
+        speeds = [speed(points[i], points[i + 1]) for i in range(len(points) - 1)]
+        speeds = [current_speed for i,current_speed in enumerate(speeds) if i not in hampel(pd.Series(speeds), window_size=6, n=3)]
+        return -1 if len(speeds) == 0 else abs(sum(speeds) / len(speeds))
 
 
 class ArucoCarDetector:
     def __init__(
-        self,
-        capture_device,
-        marker_real_length,
-        line_distance,
-        camera_matrix,
-        dist_coeff,
-        aruco_dict,
+            self,
+            capture_device,
+            marker_real_length,
+            line_distance,
+            camera_matrix,
+            dist_coeff,
+            aruco_dict,
     ):
         self.capture_device = capture_device
         self.markers = {}
@@ -109,7 +115,6 @@ class ArucoCarDetector:
 
     def process_frame(self, frame):
         gray = cv2.cvtColor(frame.copy(), cv2.COLOR_RGB2GRAY)
-
         (corners, ids, rejected) = cv2.aruco.detectMarkers(
             gray, self.dict, parameters=self.aruco_params
         )
@@ -133,11 +138,14 @@ class ArucoCarDetector:
                 (top_left, top_right, bottom_left, bottom_right),
             )
             marker = self.markers.get(id)
+            if marker is not None:
+                d = current_distance if current_distance is not None else marker.distance()
+                draw = cv2.putText(draw, str(round(d, 2)), top_left, cv2.FONT_HERSHEY_SIMPLEX, 1 / 2, (0, 255, 0))
             marker_passed = False
             if (
-                marker is not None
-                and marker.distance() is not None
-                and isPassed(current_distance, marker.distance(), self.line_distance)
+                    marker is not None
+                    and marker.distance() is not None
+                    and isPassed(current_distance, marker.distance(), self.line_distance)
             ):
                 curr_time = time.time()
                 print(
