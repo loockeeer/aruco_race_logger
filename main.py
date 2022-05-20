@@ -62,7 +62,7 @@ def main(configuration: Config, config_path: str):
             distance = marker.current.tvec[2]
             if len(marker.history) > 1:
                 previous_distance = marker.history[-2].tvec[2]
-                if previous_distance > configuration.line_distance > distance:
+                if previous_distance > configuration.line_distance > distance: 
                     logger.debug(f"Marker {id} passed the line")
                     arrived_time = t
                     if marker.speed != -1: arrived_time -= (marker.current.tvec[2] - configuration.line_distance) / marker.speed

@@ -3,10 +3,10 @@ host = "0.0.0.0"
 port = 8082
 
 [aruco]
-unit = "cm"
-capture_device = 1
-marker_size = 4.5
-line_distance = 30
+unit = "m"
+capture_device = 3
+marker_size = 0.045
+line_distance = 1.64
 aruco_dict = 6
 camera_matrix = [ [ 840.2141673438144, 0.0, 344.43834346728755,], [ 0.0, 843.5737266531174, 212.44688932615412,], [ 0.0, 0.0, 1.0,],]
 dist_coeffs = [ [ 0.022165700154412066, 1.091893593785721, -0.011324383630191746, 0.005691893971235556, -3.9134884834770327,],]
@@ -14,20 +14,29 @@ dist_coeffs = [ [ 0.022165700154412066, 1.091893593785721, -0.011324383630191746
 [logs]
 level = "DEBUG"
 
-[aruco.markers.0]
-name = "Team 0"
-
 [aruco.markers.1]
-name = "Team 1"
+name = "Bio Solar"
 
 [aruco.markers.2]
-name = "Team 2"
+name = "Tesla Solar"
 
 [aruco.markers.3]
-name = "Team 3"
+name = "L'Eclair d'Or"
 
 [aruco.markers.4]
-name = "Team 4"
+name = "Le STIG Nimbus"
 
 [aruco.markers.5]
-name = "Team 5"
+name = "BlueBird"
+
+[aruco.markers.6]
+name = "ClagisCar"
+
+[aruco.markers.7]
+name = "MIR09"
+
+[aruco.markers.8]
+name =  "La Voiture de Fou"
+
+[aruco.markers.9]
+name = "La Solar Wheels"
